@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Text to Realistic Video</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+      animation: backgroundFade 20s infinite alternate;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 20px;
+      animation: fadeInDown 1.2s ease-out;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      max-width: 600px;
+      width: 100%;
+      animation: fadeInUp 1.5s ease-out;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 20px;
+      border-radius: 15px;
+      border: none;
+      resize: none;
+      font-size: 16px;
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    button {
+      padding: 14px 40px;
+      font-size: 18px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(255, 75, 43, 0.6);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 0 0 25px rgba(255, 75, 43, 0.9);
+    }
+
+    #output {
+      margin-top: 40px;
+      animation: fadeIn 2s ease-out;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      animation: zoomIn 1s ease-out;
+    }
+
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      animation: fadeIn 2s ease;
+    }
+
+    .whatsapp-button {
+      display: inline-block;
+      padding: 14px 30px;
+      background: linear-gradient(to right, #25d366, #128c7e);
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 50px;
+      box-shadow: 0 0 15px rgba(37, 211, 102, 0.6);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .whatsapp-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(37, 211, 102, 0.9);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes backgroundFade {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Text to AI Video</h1>
+
+  <div class="container">
+    <textarea id="text" placeholder="Yahan likhein jo AI video mein bolna chahiye..."></textarea>
+    <button onclick="generateVideo()">Generate Video</button>
+  </div>
+
+  <div id="output"></div>
+
+  <footer>
+    <a href="https://whatsapp.com/channel/0029VawH7muGpLHWRj7SoR3E" target="_blank" class="whatsapp-button">
+      Generate more
+    </a>
+  </footer>
+
+  <script>
+    async function generateVideo() {
+      const text = document.getElementById('text').value.trim();
+      if (!text) return alert("Text likhna zaroori hai!");
+
+      const apiKey = 'YOUR_DID_API_KEY'; // Replace this with your real D-ID API key
+      document.getElementById('output').innerHTML = "<p style='text-align:center;'>Video ban raha hai, intezaar karein...</p>";
+
+      const res = await fetch("https://api.d-id.com/talks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Basic ${btoa(apiKey + ':')}`
+        },
+        body: JSON.stringify({
+          script: {
+            type: "text",
+            input: text,
+            subtitles: false
+          },
+          source_url: "https://create-images-results.d-id.com/DefaultModel/portrait_1.jpg"
+        })
+      });
+
+      const data = await res.json();
+      const talkId = data.id;
+
+      let videoUrl = null;
+      for (let i = 0; i < 20; i++) {
+        const poll = await fetch(`https://api.d-id.com/talks/${talkId}`, {
+          headers: { "Authorization": `Basic ${btoa(apiKey + ':')}` }
+        });
+        const pollData = await poll.json();
+        if (pollData.result_url) {
+          videoUrl = pollData.result_url;
+          break;
+        }
+        await new Promise(res => setTimeout(res, 3000));
+      }
+
+      if (videoUrl) {
+        document.getElementById('output').innerHTML = `
+          <video controls autoplay>
+            <source src="${videoUrl}" type="video/mp4">
+          </video>
+        `;
+      } else {
+        document.getElementById('output').innerHTML = "<p>Video generate nahi hua. Dobara try karein.</p>";
+      }
+    }
+  </script>
+</body>
+</html>
